@@ -18,6 +18,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var (
+	flagRegex = regexp.MustCompile(`^-+([^=]*)=`)
+	portRegex = regexp.MustCompile(`(.+):(\d+)`)
+)
+
 type Parser struct {
 	After         []string
 	ConfigFlags   []string
@@ -81,10 +86,7 @@ func (p *Parser) stripInvalidFlags(command string, args []string) ([]string, err
 		}
 	}
 
-	re, err := regexp.Compile("^-+([^=]*)=")
-	if err != nil {
-		return args, err
-	}
+	re := flagRegex
 	for _, arg := range args {
 		mArg := arg
 		if match := re.FindAllStringSubmatch(arg, -1); match != nil {
@@ -192,10 +194,7 @@ func (p *Parser) findStart(args []string) ([]string, []string, bool) {
 	}
 	afterTemp := append([]string{}, p.After...)
 	afterIndex := make(map[string]int)
-	re, err := regexp.Compile(`(.+):(\d+)`)
-	if err != nil {
-		return args, nil, false
-	}
+	re := portRegex
 	// After keywords ending with ":<NUM>" can set + NUM of arguments as the split point.
 	// used for matching on subcommmands
 	for i, arg := range afterTemp {
