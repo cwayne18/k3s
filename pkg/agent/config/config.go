@@ -44,7 +44,10 @@ const (
 	DefaultPodManifestPath = "pod-manifests"
 )
 
-var InstanceMetadataServiceIP = net.ParseIP("169.254.169.254")
+var (
+	InstanceMetadataServiceIP = net.ParseIP("169.254.169.254")
+	nameserverRe              = regexp.MustCompile(`^nameserver\s+([^\s]*)`)
+)
 
 // Get returns a pointer to a completed Node configuration struct,
 // containing a merging of the local CLI configuration with settings from the server.
@@ -383,11 +386,10 @@ func isValidResolvConf(resolvConfFile string) bool {
 	}
 	defer file.Close()
 
-	nameserver := regexp.MustCompile(`^nameserver\s+([^\s]*)`)
 	scanner := bufio.NewScanner(file)
 	foundNameserver := false
 	for scanner.Scan() {
-		ipMatch := nameserver.FindStringSubmatch(scanner.Text())
+		ipMatch := nameserverRe.FindStringSubmatch(scanner.Text())
 		if len(ipMatch) == 2 {
 			if !isValidNameserver(ipMatch[1]) {
 				return false
