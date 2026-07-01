@@ -18,6 +18,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var flagRegex = regexp.MustCompile("^-+([^=]*)=")
+
 type Parser struct {
 	After         []string
 	ConfigFlags   []string
@@ -81,13 +83,9 @@ func (p *Parser) stripInvalidFlags(command string, args []string) ([]string, err
 		}
 	}
 
-	re, err := regexp.Compile("^-+([^=]*)=")
-	if err != nil {
-		return args, err
-	}
 	for _, arg := range args {
 		mArg := arg
-		if match := re.FindAllStringSubmatch(arg, -1); match != nil {
+		if match := flagRegex.FindAllStringSubmatch(arg, -1); match != nil {
 			mArg = match[0][1]
 		}
 		if validFlags[mArg] {
